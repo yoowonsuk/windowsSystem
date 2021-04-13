@@ -1,6 +1,5 @@
 /*
 	CreateProcess.cpp
-	프로그램 설명: 덧셈 프로세스를 생성
 */
 
 #include <stdio.h>
@@ -11,12 +10,8 @@
 
 int _tmain(int argc, TCHAR* argv[])
 {
-	STARTUPINFO si = {0,};
+	STARTUPINFO si = { 0 };
 	PROCESS_INFORMATION pi;
-
-	TCHAR command[] = _T("ConsoleApplication2.exe 10 20");
-	TCHAR cDir[DIR_LEN];
-	BOOL state;
 
 	si.cb = sizeof(si);
 	si.dwFlags = STARTF_USEPOSITION | STARTF_USESIZE;
@@ -26,9 +21,9 @@ int _tmain(int argc, TCHAR* argv[])
 	si.dwYSize = 200;
 	si.lpTitle = _T("I am a boy!");
 
-	//TCHAR command[] = _T("AdderProcess.exe 10 20");
-	//TCHAR cDir[DIR_LEN];
-	//BOOL state;
+	TCHAR command[] = _T("Project1.exe 10 20");
+	TCHAR cDir[DIR_LEN];
+	BOOL state;
 
 	GetCurrentDirectory(DIR_LEN, cDir);
 	_fputts(cDir, stdout);
@@ -40,12 +35,12 @@ int _tmain(int argc, TCHAR* argv[])
 	_fputts(cDir, stdout);
 	_fputts(_T("\n"), stdout);
 
-	state = CreateProcess (NULL, command, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi); // CreateProcess
+	state = CreateProcess(NULL, command, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
 
-	if(state!=0)
-		_fputts(_T("Create OK! \n"), stdout);
+	if (state)
+		_fputts(_T("Creation OK! \n"), stdout);
 	else
-		_fputts(_T("Createion Error! \n"), stdout);
-	
+		_fputts(_T("Creation ERROR! \n"), stdout);
+
 	return 0;
 }
