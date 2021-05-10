@@ -17,7 +17,7 @@ TCHAR ERROR_CMD[] = _T("'%s'은(는) 실행할 수 있는 프로그램이 아닙
 int CmdProcessing(void);
 TCHAR * StrLower(TCHAR *);
 
-int tmain(int argc, TCHAR * argv[])
+int _tmain(int argc, TCHAR * argv[])
 {
 	// 한글 입력을 가능케 하기 위해
 	_tsetlocale(LC_ALL, _T("Korean"));
@@ -74,7 +74,14 @@ int CmdProcessing(void)
 	}
 
 	else
-		_tprintf(ERROR_CMD, cmdTokenList[0]);
+	{
+		STARTUPINFO si = { 0, };
+		PROCESS_INFORMATION pi;
+		si.cb = sizeof(si);
+		BOOL isRun = CreateProcess(NULL, cmdTokenList[0], NULL, NULL, TRUE, 0, NULL, NULL, &si, &pi);
+		if(isRun == FALSE)
+			_tprintf(ERROR_CMD, cmdTokenList[0]);
+	}
 
 	return 0;
 }
