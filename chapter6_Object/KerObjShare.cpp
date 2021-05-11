@@ -1,6 +1,6 @@
 /*
 	KerObjShare.cpp
-	프로그램 설명: 커널 오브젝트 공유 예지
+	프로그램 설명: 커널 오브젝트 공유 예
 */
 
 #include <stdio.h>
