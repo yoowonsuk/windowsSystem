@@ -101,17 +101,18 @@ int CmdProcessing(int tokenNum)
 	else if (!_tcscmp(cmdTokenList[0], _T("start")))
 	{
 		TCHAR optString[STR_LEN] = { 0 };
+		TCHAR cmdStringWithOptions[STR_LEN] = { 0 };
 		if (tokenNum > 1)
 		{
 			int i;
 			for (i = 1; i < tokenNum; i++)
 				_stprintf(optString, _T("%s %s"), optString, cmdTokenList[i]);
 		}
-		_stprintf(optString, _T("%s %s"), _T("Project3.exe"), optString); // Project3.exe (start) (command)
+		_stprintf(cmdStringWithOptions, _T("%s %s"), _T("Project3.exe"), optString); // Project3.exe (start) (command)
 		STARTUPINFO si = { 0, };
 		PROCESS_INFORMATION pi;
 		si.cb = sizeof(si);
-		BOOL isRun = CreateProcess(NULL, optString, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
+		BOOL isRun = CreateProcess(NULL, cmdStringWithOptions, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &si, &pi);
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
 	}
@@ -119,6 +120,7 @@ int CmdProcessing(int tokenNum)
 	else if (!_tcscmp(cmdTokenList[0], _T("echo")))
 	{
 		TCHAR optString[STR_LEN] = { 0 };
+		TCHAR cmdStringWithOptions[STR_LEN] = { 0 };
 		int i;
 		for (i = 1; i < tokenNum; i++)
 			_stprintf(optString, _T("%s %s"), optString, cmdTokenList[i]);
