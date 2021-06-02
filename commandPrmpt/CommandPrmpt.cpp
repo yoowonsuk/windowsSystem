@@ -31,12 +31,13 @@ int _tmain(int argc, TCHAR * argv[])
 
 	/*
 	int i;
+	_tprintf("argc: %d\n", argc);
 	for (i = 0; i < argc; i++)
-		_tprintf("%s\n", argv[i]);
+		_tprintf("argv[%d]: %s\n", i, argv[i]);
 	*/
 
 	// start command
-	if (argc > 2)
+	if (argc > 1)
 	{
 		int i;
 		for (i = 1; i < argc; i++)
@@ -106,8 +107,7 @@ int CmdProcessing(int tokenNum)
 			for (i = 1; i < tokenNum; i++)
 				_stprintf(optString, _T("%s %s"), optString, cmdTokenList[i]);
 		}
-		_stprintf(optString, _T("%s %s"), _T("Project3.exe"), optString);
-
+		_stprintf(optString, _T("%s %s"), _T("Project3.exe"), optString); // Project3.exe (start) (command)
 		STARTUPINFO si = { 0, };
 		PROCESS_INFORMATION pi;
 		si.cb = sizeof(si);
