@@ -84,20 +84,20 @@ DWORD ShowMenu()
 
 void Divide(double a, double b)
 {
-	_tprintf(_T("%f / f = %f \n\n"), a, b, a / b);
+	_tprintf(_T("%f / %f = %f \n\n"), a, b, a / b);
 }
 
 void Multiple(double a, double b)
 {
-	_tprintf(_T("%f * f = %f \n\n"), a, b, a * b);
+	_tprintf(_T("%f * %f = %f \n\n"), a, b, a * b);
 }
 
 void Add(double a, double b)
 {
-	_tprintf(_T("%f + f = %f \n\n"), a, b, a + b);
+	_tprintf(_T("%f + %f = %f \n\n"), a, b, a + b);
 }
 
 void Min(double a, double b)
 {
-	_tprintf(_T("%f - f = %f \n\n"), a, b, a - b);
+	_tprintf(_T("%f - %f = %f \n\n"), a, b, a - b);
 }
