@@ -53,6 +53,9 @@ int _tmain(int argc, TCHAR* argv[])
 	CloseHandle(pi1.hThread);
 	CloseHandle(pi2.hThread);	
 
+	WaitForSingleObject(pi1.hProcess, INFINITE);
+	WaitForSingleObject(pi2.hProcess, INFINITE);
+	
 	GetExitCodeProcess(pi1.hProcess, &return_val1);
 	GetExitCodeProcess(pi2.hProcess, &return_val2);
 
