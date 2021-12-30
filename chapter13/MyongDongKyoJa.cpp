@@ -56,7 +56,7 @@ int _tmain(int argc, TCHAR* argv[])
 	for(int i=0; i<NUM_OF_CUSTOMER ;i++)
 	{
         randTimeArr[i] = (DWORD) (
-				(rand() % RAND_MAX) + RANGE_MIN
+				(rand() % RANGE_MAX) + RANGE_MIN
 				//((double)rand() / (double)RAND_MAX) * RANGE_MAX + RANGE_MIN
 			);
   	}
