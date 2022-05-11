@@ -1,8 +1,8 @@
 /*
-    CommandPrmpt_Five.cpp
-    프로그램 설명: 명령 프롬프트 5차 
-    명령어 1: sort --> 문자열 정렬.
-    명령어 2: sort > sort.dat  --> 출력 리다이렉션.
+    CommandPrmpt_Six.cpp
+    프로그램 설명: 명령 프롬프트 6차 
+    명령어 1: type --> 텍스트 파일 내용 출력.
+    명령어 2: type text.txt | sort  --> 파이프.
 */
 
 #include <stdio.h>
@@ -10,6 +10,7 @@
 #include <locale.h>
 #include <windows.h> 
 #include <tlhelp32.h>
+#include <ctype.h>
 
 #define STR_LEN    256
 #define CMD_TOKEN_NUM  10
@@ -38,7 +39,7 @@ int _tmain(int argc, TCHAR * argv[])
 		CmdProcessing(argc-1);
 	}
 
-	DWORD isExit = NULL;
+	DWORD isExit = 0; //NULL;
 	while(1)
 	{
 		int tokenNum = CmdReadTokenize();
@@ -153,6 +154,78 @@ void KillProcess(void)
 		_tprintf(_T("Kill process fail, Try again! \n"));
 }
 
+void TypeTextFile(void)
+{
+	TCHAR cmdStringWithOptions[STR_LEN]={0,};
+	BOOL isRun;
+
+	if(!_tcscmp(cmdTokenList[2], _T("|")) )
+	{
+		/* Create unnamed pipe */
+		HANDLE hReadPipe, hWritePipe;
+
+		SECURITY_ATTRIBUTES pipeSA ={
+			sizeof(SECURITY_ATTRIBUTES), NULL, TRUE
+		};
+
+		CreatePipe(&hReadPipe, &hWritePipe, &pipeSA, 0);
+
+		/* process type을 위한 선언 */
+		STARTUPINFO siType={0,};
+		PROCESS_INFORMATION piType;
+		siType.cb=sizeof(siType);
+
+		siType.hStdInput=GetStdHandle(STD_INPUT_HANDLE);
+		siType.hStdError=GetStdHandle(STD_ERROR_HANDLE);
+		siType.hStdOutput=hWritePipe;       // 출력 리다이렉션!
+		siType.dwFlags |=STARTF_USESTDHANDLES;
+
+		_tcscpy(cmdStringWithOptions, cmdTokenList[0]);
+		_stprintf(cmdStringWithOptions, _T("%s %s"), cmdStringWithOptions, cmdTokenList[1]);
+
+		isRun = CreateProcess(NULL, cmdStringWithOptions, NULL, NULL, TRUE, 0, NULL, NULL, &siType, &piType);
+
+		CloseHandle(piType.hThread);
+		CloseHandle(hWritePipe);
+
+		/* process sort를 위한 선언*/
+		STARTUPINFO siSort={0,};
+		PROCESS_INFORMATION piSort;
+		siSort.cb=sizeof(siSort);
+
+		siSort.hStdInput=hReadPipe;		    // 입력 리다이렉션!
+		siSort.hStdError=GetStdHandle(STD_ERROR_HANDLE);
+		siSort.hStdOutput=GetStdHandle(STD_OUTPUT_HANDLE);
+		siSort.dwFlags |=STARTF_USESTDHANDLES;
+
+		isRun = CreateProcess(NULL, cmdTokenList[3], NULL, NULL, TRUE, 0, NULL, NULL, &siSort, &piSort);
+
+		CloseHandle(piSort.hThread);
+		CloseHandle(hReadPipe);
+
+		WaitForSingleObject(piType.hProcess, INFINITE);
+		WaitForSingleObject(piSort.hProcess, INFINITE);
+
+		CloseHandle(piType.hProcess);
+		CloseHandle(piSort.hProcess);
+	}
+	else
+	{
+		_tcscpy(cmdStringWithOptions, cmdTokenList[0]);
+		_stprintf(cmdStringWithOptions, _T("%s %s"), cmdStringWithOptions, cmdTokenList[1]);
+
+		STARTUPINFO si={0,};
+		PROCESS_INFORMATION pi;
+		si.cb=sizeof(si);
+
+		isRun = CreateProcess(NULL, cmdStringWithOptions, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi);
+		WaitForSingleObject(pi.hProcess, INFINITE);
+
+		CloseHandle(pi.hProcess);
+		CloseHandle(pi.hThread);
+	}
+}
+
 int CmdProcessing(int tokenNum)
 { 
 	BOOL isRun;
@@ -209,9 +282,9 @@ int CmdProcessing(int tokenNum)
 	{
 		if(!_tcscmp(cmdTokenList[1], _T(">")) )
 		{
-			SECURITY_ATTRIBUTES fileSec ={
+			SECURITY_ATTRIBUTES fileSec = {
 				sizeof(SECURITY_ATTRIBUTES), NULL, TRUE
-			};  // 상속 가능해야 지정 가능! 
+			};// 상속 가능해야 지정 가능!
 
 			HANDLE hFile = CreateFile ( 
 				cmdTokenList[2], GENERIC_WRITE,	FILE_SHARE_READ,
@@ -236,7 +309,13 @@ int CmdProcessing(int tokenNum)
 
 		CloseHandle(pi.hProcess);
 		CloseHandle(pi.hThread);
+
 	}
+	/*else if( !_tcscmp(cmdTokenList[0], _T("type")) )
+	{
+		TypeTextFile();
+	}
+	*/
 	else
 	{
 		_tcscpy(cmdStringWithOptions, cmdTokenList[0]);
@@ -271,3 +350,74 @@ TCHAR * StrLower(TCHAR *pStr)
 
 	return ret;
 }
+
+
+
+/*************************************************************************************
+sort는 프로세스로 생성....
+**************************************************************************************/
+#define MAX_STRING_NUM 100
+#define MAX_STRING_LEN 256
+
+void SortString()  // 파이프 예제를 위해서 독립된 실행파일로 만들어야 한다(힌트).
+{
+	TCHAR stringArr[MAX_STRING_NUM][MAX_STRING_LEN];
+
+	// 콘솔로부터 문자열을 읽어들인다.
+	int nStr;
+	for(nStr=0; nStr<MAX_STRING_NUM; nStr++)
+	{
+		TCHAR * isEOF = _fgetts(stringArr[nStr], MAX_STRING_LEN, stdin);
+		if(isEOF == NULL)    // EOF는 Ctrl+Z..
+			break;
+	}
+
+	// String Bubble Sort... 성능 고려하지 않고 문자열 단위 연산...
+	TCHAR strTemp[MAX_STRING_LEN];
+
+	for(int i=0; i<nStr; i++)
+	{
+		for(int j= nStr-1; j>i; j--)
+		{
+			if( _tcscmp(stringArr[j-1], stringArr[j]) >0 )
+			{
+				_tcscpy(strTemp, stringArr[j-1]);
+				_tcscpy(stringArr[j-1], stringArr[j]);
+				_tcscpy(stringArr[j], strTemp); 
+			}
+		}
+	}
+
+	for(int i=0; i<nStr; i++)
+		_fputts(stringArr[i], stdout);
+}
+
+int _tmain_sortmain(int argc, TCHAR * argv[])
+{
+	SortString();
+
+	return 0;
+}
+
+/*************************************************************************************
+type은 프로세스로 생성....
+**************************************************************************************/
+void TYPE(TCHAR * fileName)	// FOR REDIRECTION...
+{
+	static TCHAR StringBuff[1024];
+
+	FILE * filePtr = _tfopen(fileName, _T("rt"));
+	while(_fgetts(StringBuff, 1024, filePtr))
+		_fputts(StringBuff, stdout);
+}
+
+int _tmain_typemain(int argc, TCHAR * argv[])
+{
+	if(argc <2)
+		return -1; 
+
+	TYPE(argv[1]);
+
+	return 0;
+}
+
