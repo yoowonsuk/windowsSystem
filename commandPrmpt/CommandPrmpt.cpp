@@ -1,8 +1,7 @@
 /*
-    CommandPrmpt_Six.cpp
-    프로그램 설명: 명령 프롬프트 6차 
-    명령어 1: type --> 텍스트 파일 내용 출력.
-    명령어 2: type text.txt | sort  --> 파이프.
+    CommandPrmpt_Seven.cpp
+    프로그램 설명: 명령 프롬프트 7차 
+    명령어: XCOPY --> 디렉터리 단위 복사. 
 */
 
 #include <stdio.h>
@@ -10,7 +9,6 @@
 #include <locale.h>
 #include <windows.h> 
 #include <tlhelp32.h>
-#include <ctype.h>
 
 #define STR_LEN    256
 #define CMD_TOKEN_NUM  10
@@ -39,7 +37,7 @@ int _tmain(int argc, TCHAR * argv[])
 		CmdProcessing(argc-1);
 	}
 
-	DWORD isExit = 0; //NULL;
+	DWORD isExit = NULL;
 	while(1)
 	{
 		int tokenNum = CmdReadTokenize();
@@ -226,6 +224,87 @@ void TypeTextFile(void)
 	}
 }
 
+/******************************************************************
+
+XCOPY 관련 함수 및 변수.
+******************************************************************/
+int nCopyFiles = 0;
+BOOL XCOPY(TCHAR * source, TCHAR * dest);
+
+BOOL CopyDirectoryFiles(WIN32_FIND_DATA fileData, TCHAR * source, TCHAR * dest)
+{
+	BOOL isSuccess = NULL;
+
+	if( !_tcscmp(fileData.cFileName, _T(".") ) || !_tcscmp(fileData.cFileName, _T("..")))
+	{
+		// 특별한 처리 필요 없음.
+	}
+	else if(fileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		TCHAR subSourceDir[MAX_PATH];
+		TCHAR subDestDir[MAX_PATH];
+
+		_stprintf(subSourceDir, _T("%s\\%s"),  source, fileData.cFileName);
+		_stprintf(subDestDir, _T("%s\\%s"),  dest, fileData.cFileName);
+
+		CreateDirectory(subDestDir, NULL);
+
+		XCOPY(subSourceDir, subDestDir);
+	}
+	else
+	{
+		TCHAR sourceFile[MAX_PATH];
+		TCHAR destFile[MAX_PATH];
+
+		_tcscpy(sourceFile, source);
+		_tcscpy(destFile, dest);
+
+		_stprintf(sourceFile, _T("%s\\%s"), sourceFile, fileData.cFileName);
+		_stprintf(destFile, _T("%s\\%s"), destFile, fileData.cFileName);
+
+		isSuccess = CopyFile(sourceFile,  destFile, FALSE);
+		if(isSuccess == 0)
+			return FALSE;
+
+		nCopyFiles++;
+
+	}
+	return TRUE;
+}
+
+// Only Directory Copy!
+BOOL XCOPY(TCHAR * source, TCHAR * dest) 
+{
+	// Copy Recursively...
+	WIN32_FIND_DATA fileData;
+	BOOL isSuccess = NULL;
+
+	TCHAR firstFFStr[MAX_PATH];
+	_stprintf(firstFFStr, _T("%s\\%s"), source, _T("*"));
+
+	HANDLE searchHandle = FindFirstFile(firstFFStr, &fileData);	
+	if(searchHandle == INVALID_HANDLE_VALUE)
+		return FALSE;
+	else
+		CopyDirectoryFiles(fileData, source, dest);
+
+	while (1) 
+	{ 
+		if (!FindNextFile(searchHandle, &fileData)) 
+			break;
+		else
+		{
+			isSuccess = CopyDirectoryFiles(fileData, source, dest);
+			if(isSuccess == FALSE)
+				break;
+		}
+	} 	
+
+	FindClose(searchHandle);
+
+	return TRUE;
+}
+
 int CmdProcessing(int tokenNum)
 { 
 	BOOL isRun;
@@ -311,11 +390,15 @@ int CmdProcessing(int tokenNum)
 		CloseHandle(pi.hThread);
 
 	}
-	/*else if( !_tcscmp(cmdTokenList[0], _T("type")) )
+	else if( !_tcscmp(cmdTokenList[0], _T("type")) )
 	{
 		TypeTextFile();
 	}
-	*/
+	else if( !_tcscmp(cmdTokenList[0], _T("xcopy")) )
+	{
+		XCOPY(cmdTokenList[1], cmdTokenList[2]);
+		_tprintf( _T("%d개의 파일이 복사되었습니다. \n"), nCopyFiles );
+	}
 	else
 	{
 		_tcscpy(cmdStringWithOptions, cmdTokenList[0]);
